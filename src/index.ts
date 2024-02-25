@@ -9,7 +9,7 @@ const httpServer = createServer(app);
 
 const io = new Server(httpServer, {
     cors: {
-        origin: "http://localhost:5173"
+        origin: process.env.HOST ?? "http://localhost:5173",
     }
 });
 
@@ -128,4 +128,4 @@ io.on('connection', (socket) => {
     });
 });
 
-httpServer.listen(3000);
+httpServer.listen(process.env.PORT ?? 4000);

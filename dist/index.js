@@ -2,6 +2,7 @@
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
+var _a, _b;
 Object.defineProperty(exports, "__esModule", { value: true });
 const socket_io_1 = require("socket.io");
 const express_1 = __importDefault(require("express"));
@@ -12,7 +13,7 @@ const app = (0, express_1.default)();
 const httpServer = (0, http_1.createServer)(app);
 const io = new socket_io_1.Server(httpServer, {
     cors: {
-        origin: "http://localhost:5173"
+        origin: (_a = process.env.HOST) !== null && _a !== void 0 ? _a : "http://localhost:5173",
     }
 });
 let roomList = [];
@@ -123,4 +124,4 @@ io.on('connection', (socket) => {
         console.log('user disconnected');
     });
 });
-httpServer.listen(3000);
+httpServer.listen((_b = process.env.PORT) !== null && _b !== void 0 ? _b : 4000);
