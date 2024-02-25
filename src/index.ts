@@ -1,8 +1,13 @@
 import { Server } from "socket.io";
+import express from "express";
+import { createServer } from "http";
 import { Player } from "./types/Player";
 import { GAME_STATUS, Room } from "./types/Room";
 
-const io = new Server({
+const app = express();
+const httpServer = createServer(app);
+
+const io = new Server(httpServer, {
     cors: {
         origin: "http://localhost:5173"
     }
@@ -123,4 +128,4 @@ io.on('connection', (socket) => {
     });
 });
 
-io.listen(3000);
+httpServer.listen(3000);
