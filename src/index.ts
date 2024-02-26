@@ -45,10 +45,15 @@ io.on('connection', (socket) => {
             socket?.emit("game_status", GAME_STATUS.ROOM_FULL_INVALID);
             return;
         }
+        let turn;
         if (room.player1) {
-            room.player2 = new Player(socket, data?.playerId, data?.playerName, true);
-        } else {
-            room.player1 = new Player(socket, data?.playerId, data?.playerName, true);
+            const p2PlayingAs = room?.player1.playingAs === 'CIRCLE' ? "CROSS" : "CIRCLE";
+            room.player2 = new Player(socket, data?.playerId, data?.playerName, p2PlayingAs);
+            turn = room.player1.id;
+        } else if (room.player2) {
+            const p1PlayingAs = room?.player2.playingAs === 'CIRCLE' ? "CROSS" : "CIRCLE";
+            room.player1 = new Player(socket, data?.playerId, data?.playerName, p1PlayingAs);
+            turn = room.player2.id;
         }
         socket.join(roomId);
         io?.to(roomId).emit("game_status", GAME_STATUS.STARTED);
@@ -58,15 +63,15 @@ io.on('connection', (socket) => {
                 player1: {
                     id: room?.player1?.id,
                     name: room?.player1?.name,
-                    playingAs: "CROSS",
+                    playingAs: room?.player1?.playingAs,
                 },
                 player2: {
                     id: room?.player2?.id,
                     name: room?.player2?.name,
-                    playingAs: "CIRCLE",
-                }
+                    playingAs: room?.player2?.playingAs,
+                },
+                turn: turn,
             });
-        io?.to(roomId).emit("game_turn", room.player1.id);
     });
 
     socket.on("turn", (data) => {
@@ -77,6 +82,33 @@ io.on('connection', (socket) => {
             io?.to(data.roomId).emit("game_turn", room?.player1?.id);
         }
         io?.to(data.roomId).emit("game_board", data.board);
+    })
+
+    socket.on("reset", (data) => {
+        const [room] = getRoomIfPresent(data?.roomId);
+        let turn;
+        if (room) {
+            if (data?.previousMatchTurn === room?.player1?.id) {
+                turn = room?.player2?.id;
+            } else {
+                turn = room?.player1?.id;
+            }
+            io?.to(data?.roomId).emit("room_info",
+                {
+                    roomId: room.id,
+                    player1: {
+                        id: room?.player1?.id,
+                        name: room?.player1?.name,
+                        playingAs: data?.currentPlayerPlayingAs === "CIRCLE" ? "CROSS" : "CIRCLE",
+                    },
+                    player2: {
+                        id: room?.player2?.id,
+                        name: room?.player2?.name,
+                        playingAs: data?.opponentPlayerPlayingAs === "CIRCLE" ? "CROSS" : "CIRCLE",
+                    },
+                    turn: turn,
+                });
+        }
     })
 
     socket.on("leave_room", (data) => {
@@ -114,17 +146,17 @@ io.on('connection', (socket) => {
         if (!room) {
             roomList.push({
                 id: roomId,
-                player1: new Player(socket, data?.playerId, data?.playerName, true),
+                player1: new Player(socket, data?.playerId, data?.playerName, data?.playingAs),
                 player2: null,
             })
         }
         socket.join(roomId);
         io?.to(roomId).emit("game_status", GAME_STATUS.WAITING);
-
     })
 
     socket.on('disconnect', () => {
         console.log('user disconnected');
+
     });
 });
 

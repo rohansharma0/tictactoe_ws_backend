@@ -1,12 +1,13 @@
 export class Player {
     socket: any;
-    online: boolean = true;
     name !: string;
     id !: string;
 
-    constructor(socket: any, id: string, name: string, online: boolean) {
+    playingAs !: "CROSS" | "CIRCLE";
+
+    constructor(socket: any, id: string, name: string, playingAs: "CROSS" | "CIRCLE") {
         this.socket = socket;
-        this.online = online;
+        this.playingAs = playingAs;
         this.name = name;
         this.id = id;
     }
